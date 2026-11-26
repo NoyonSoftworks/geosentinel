@@ -1,0 +1,9 @@
+ioc_type,value,threat_label,source
+ipv4,185.220.101.5,Tor Exit Node,ThreatFeed-Alpha
+ipv4,8.8.8.8,Google Public DNS (Benign),Internal Baseline
+ipv4,198.51.100.14,Bogon / Documentation Net,Darknet Sensor
+ipv4,103.205.71.34,Suspected C2 Server (Dhaka),Firewall Incident #4092
+domain,malicious-phishing-portal.com,Credential Harvesting,PhishTank
+domain,github.com,Legitimate Infrastructure,Baseline
+address,Gulshan 2, Dhaka,Target Physical Data Center,OSINT Facility Recon
+address,Agrabad, Chattogram,Branch Office Physical Location,OSINT Facility Recon
