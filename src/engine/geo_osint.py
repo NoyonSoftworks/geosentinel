@@ -30,24 +30,45 @@ class PhysicalGeoOSINTEngine:
         self.gazetteer_path = gazetteer_path or str(DATA_DIR / "bangladesh_thana_district.csv")
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
-        self.districts = []
+        # Built-in Seed Knowledge (Districts and Major Thanas)
+        self.built_in_districts = [
+            "dhaka", "gazipur", "narayanganj", "munshiganj", "manikganj", "narsingdi", "kishoreganj", "tangail",
+            "mymensingh", "jamalpur", "netrokona", "sherpur", "faridpur", "madaripur", "gopalganj", "rajbari", "shariatpur",
+            "chattogram", "cox s bazar", "feni", "noakhali", "lakshmipur", "rangamati", "khagrachhari", "bandarban", "comilla", "brahmanbaria",
+            "sylhet", "moulvibazar", "habiganj", "sunamganj", "khulna", "jashore", "satkhira", "bagerhat", "chuadanga", "kushtia",
+            "meherpur", "jhenaidah", "magura", "narail", "rajshahi", "chapainawabganj", "naogaon", "natore", "pabna", "sirajganj", "bogura",
+            "barishal", "patuakhali", "barguna", "jhalokathi", "pirojpur", "bhola", "rangpur", "dinajpur", "nilphamari", "lalmonirhat",
+            "kurigram", "gaibandha", "thakurgaon", "panchagarh"
+        ]
+        self.area_to_district = {
+            "gulshan": "dhaka", "banani": "dhaka", "baridhara": "dhaka", "badda": "dhaka",
+            "uttara": "dhaka", "mirpur": "dhaka", "mohammadpur": "dhaka", "tejgaon": "dhaka",
+            "dhanmondi": "dhaka", "lalbagh": "dhaka", "motijheel": "dhaka", "paltan": "dhaka",
+            "rampura": "dhaka", "jatrabari": "dhaka", "wari": "dhaka", "khilgaon": "dhaka",
+            "bashundhara": "dhaka", "niketan": "dhaka", "tongi": "gazipur", "joydebpur": "gazipur",
+            "agrabad": "chattogram", "panchlaish": "chattogram", "halishahar": "chattogram",
+            "patenga": "chattogram", "kotwali": "chattogram", "boalia": "rajshahi"
+        }
+        self.districts = list(self.built_in_districts)
         self.district_to_thanas = {}
-        self.thana_to_district = {}
+        self.thana_to_district = dict(self.area_to_district)
         self.cache: Dict[str, Dict[str, Any]] = {}
         self._load_gazetteer()
 
     def _load_gazetteer(self) -> None:
-        """Loads offline administrative divisions and thanas."""
+        """Loads offline administrative divisions and thanas, skipping purely numeric data."""
         if not os.path.exists(self.gazetteer_path):
-            logger.warning(f"Gazetteer file not found at {self.gazetteer_path}. Using fallback defaults.")
             return
 
+        numeric = re.compile(r"^\s*\d+([/.,-]\d+)*\s*$")
         try:
             with open(self.gazetteer_path, "r", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
                     dist = row.get("district", "").strip().lower()
                     thana = row.get("thana", "").strip().lower()
+                    if numeric.fullmatch(dist) or numeric.fullmatch(thana):
+                        continue
                     if dist and dist not in self.districts:
                         self.districts.append(dist)
                     if dist and thana:
