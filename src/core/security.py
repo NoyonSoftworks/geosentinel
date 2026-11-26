@@ -36,7 +36,9 @@ def defang_ip(ip: str) -> str:
     """
     if not ip or not isinstance(ip, str):
         return ""
-    return ip.replace(".", "[.]").replace(":", "[:]")
+    clean = re.sub(r"(?<!\[)\.(?!\])", "[.]", ip)
+    clean = re.sub(r"(?<!\[):(?!\])", "[:]", clean)
+    return clean
 
 
 def refang_ip(ip: str) -> str:
@@ -60,7 +62,7 @@ def defang_url(url: str) -> str:
         return ""
     defanged = re.sub(r"^https://", "hxxps://", url, flags=re.IGNORECASE)
     defanged = re.sub(r"^http://", "hxxp://", defanged, flags=re.IGNORECASE)
-    defanged = defanged.replace(".", "[.]")
+    defanged = re.sub(r"(?<!\[)\.(?!\])", "[.]", defanged)
     return defanged
 
 
@@ -107,10 +109,10 @@ def is_safe_public_ip(target: str) -> Tuple[bool, str]:
 
     if ip_obj.is_loopback:
         return False, "SSRF Blocked: Loopback address (localhost)"
-    if ip_obj.is_private:
-        return False, "SSRF Blocked: RFC1918 Private internal network address"
     if ip_obj.is_link_local:
         return False, "SSRF Blocked: Link-local address (Cloud metadata service)"
+    if ip_obj.is_private:
+        return False, "SSRF Blocked: RFC1918 Private internal network address"
     if ip_obj.is_multicast:
         return False, "SSRF Blocked: Multicast address"
     if ip_obj.is_reserved:
